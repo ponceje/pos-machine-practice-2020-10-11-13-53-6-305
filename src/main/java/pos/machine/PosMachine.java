@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class PosMachine {
     public String printReceipt(List<String> barcodes) {
@@ -30,7 +31,7 @@ public class PosMachine {
         String productDetailStr=null;
         ArrayList<String> productDetailList = new ArrayList<String>();
         for (Product product : receipt.getProductDetail()){
-            productDetailStr ="Name: "+product.getName()+", Quantity: "+product.getQty()+", Unit price: "+product.getUnitPrice()+" (yuan), Subtotal: "+product.getSubTotal()+" (yuan)";
+            productDetailStr = new StringBuilder().append("Name: ").append(product.getName()).append(", Quantity: ").append(product.getQty()).append(", Unit price: ").append(product.getUnitPrice()).append(" (yuan), Subtotal: ").append(product.getSubTotal()).append(" (yuan)").toString();
             productDetailList.add(productDetailStr);
         }
         productDetailStr=String.join("\n",productDetailList);
@@ -43,8 +44,7 @@ public class PosMachine {
         List<ProductInfo> itemLoader = ItemDataLoader.loadAllItemInfos();
         for(String codes : barcodes){
             for (ProductInfo item : itemLoader){
-                String getBarcode = item.getBarcode();
-              if (codes.equals(getBarcode)){
+              if (codes.equals(item.getBarcode())){
                   product.add(item);
               }
             }
@@ -53,12 +53,10 @@ public class PosMachine {
     }
 
     private Receipt computeProduct(List<ProductInfo> product) {
-        Receipt receipt = null;
 
         List<Product> productsWithQty = countQtyProduct(product);
-        receipt = computeTotal(productsWithQty);
 
-        return receipt;
+        return computeTotal(productsWithQty);
     }
 
 
@@ -66,34 +64,25 @@ public class PosMachine {
 
     private List<Product> countQtyProduct(List<ProductInfo> product) {
         List<Product> productWithQty = new ArrayList<>();
-        List<ProductInfo> distinctProduct = new ArrayList<>();
-        Set<ProductInfo> uniqueValues = new HashSet<>();
-        for (ProductInfo productInfo : product) {
-            if (uniqueValues.add(productInfo)) {
-                distinctProduct.add(productInfo);
-            }
-        }
+
+        List<ProductInfo> distinctProduct = product.stream()
+                .distinct()
+                .collect(Collectors.toList());
 
         for(ProductInfo prod : distinctProduct ){
-            int count=0;
-            for (ProductInfo prodList : product){
-                if(prod.getBarcode().equals(prodList.getBarcode())){
-                    count++;
-                }
-            }
+
+            int count= (int) product.stream().filter(counting -> counting.getBarcode().equals(prod.getBarcode())).count();
+
             Product item = new Product(prod.getName(),count,prod.getPrice(),prod.getPrice()*count);
             productWithQty.add(item);
+
         }
         return productWithQty;
     }
 
-
     private Receipt computeTotal(List<Product> productsWithQty) {
         Receipt receipt = new Receipt();
-        int total = 0;
-        for (Product product : productsWithQty){
-            total = total+product.subTotal;
-        }
+        int total = productsWithQty.stream().mapToInt(Product::getSubTotal).sum();
         receipt.setProductDetail(productsWithQty);
         receipt.setTotal(total);
         return receipt;
