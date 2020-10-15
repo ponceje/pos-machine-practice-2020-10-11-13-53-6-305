@@ -35,7 +35,7 @@ public class PosMachine {
                     product.getName(), product.getQty(), product.getUnitPrice(), product.getSubTotal());
             productDetailList.add(productDetailStr);
         }
-        return String.join("\n",productDetailList);;
+        return String.join("\n",productDetailList);
     }
 
     private List<ProductInfo> getProductInfo(List<String> barcodes) {
