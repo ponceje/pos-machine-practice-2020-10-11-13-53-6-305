@@ -10,33 +10,32 @@ public class PosMachine {
     public String printReceipt(List<String> barcodes) {
         List<ProductInfo> product = getProductInfo(barcodes);
         Receipt receipt = computeProduct(product);
-        String receitStr = collectReceipt(receipt);
-        
-        return receitStr;
+        return collectReceipt(receipt);
     }
 
     private String collectReceipt(Receipt receipt) {
         String ProductDetailStr = spliceToDetail(receipt);
-        String receiptStr= generateReceipt(receipt.getTotal(),ProductDetailStr);
-        return receiptStr;
+        return generateReceipt(receipt.getTotal(),ProductDetailStr);
     }
 
     private String generateReceipt(int total, String productDetailStr) {
-        String receipt="***<store earning no money>Receipt***\n"+productDetailStr+"\n"+
-                "----------------------\nTotal: "+total+" (yuan)\n**********************";
-        return receipt;
+        return new StringBuilder()
+                .append("***<store earning no money>Receipt***\n")
+                .append(productDetailStr).append("\n")
+                .append("----------------------\nTotal: ")
+                .append(total)
+                .append(" (yuan)\n**********************").toString();
     }
 
     private String spliceToDetail(Receipt receipt) {
         String productDetailStr=null;
         ArrayList<String> productDetailList = new ArrayList<String>();
         for (Product product : receipt.getProductDetail()){
-            productDetailStr = new StringBuilder().append("Name: ").append(product.getName()).append(", Quantity: ").append(product.getQty()).append(", Unit price: ").append(product.getUnitPrice()).append(" (yuan), Subtotal: ").append(product.getSubTotal()).append(" (yuan)").toString();
+            productDetailStr = String.format("Name: %s, Quantity: %d, Unit price: %d (yuan), Subtotal: %d (yuan)",
+                    product.getName(), product.getQty(), product.getUnitPrice(), product.getSubTotal());
             productDetailList.add(productDetailStr);
         }
-        productDetailStr=String.join("\n",productDetailList);
-
-        return productDetailStr;
+        return String.join("\n",productDetailList);;
     }
 
     private List<ProductInfo> getProductInfo(List<String> barcodes) {
